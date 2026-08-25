@@ -72,10 +72,10 @@ async function run() {
     ========================== */
 
     /* find all carts data */
-    app.post('/carts', async (req, res) => {
-      const cartItems = req.body;
-      const query = { email: email };
-      const result = await cartCollection.find(query).toArray();
+    app.get('/carts', async (req, res) => {
+      // const cartItems = req.body;
+      // const query = { email: email };
+      const result = await cartCollection.find().toArray();
       res.send(result);
     });
 
@@ -86,44 +86,107 @@ async function run() {
       res.send(result);
     });
 
+    /* =========================
+   Find All Carts
+========================= */
+    app.get('/carts', async (req, res) => {
+      const result = await cartCollection.find().toArray();
+
+      res.send(result);
+    });
+
+    /* =========================
+   Add Cart
+========================= */
+    app.post('/carts', async (req, res) => {
+      const cartItem = req.body;
+
+      const result = await cartCollection.insertOne(cartItem);
+
+      res.send(result);
+    });
+
+    /* =========================
+   Update Cart Quantity
+========================= */
+    app.patch('/carts/:foodId', async (req, res) => {
+      try {
+        const foodId = req.params.foodId;
+        const { quantity } = req.body;
+
+        if (quantity < 1) {
+          return res.status(400).send({
+            success: false,
+            message: 'Quantity must be at least 1',
+          });
+        }
+        const filter = {
+          foodId: foodId,
+        };
+        const updateDoc = {
+          $set: {
+            quantity: quantity,
+          },
+        };
+        const result = await cartCollection.updateOne(filter, updateDoc);
+        if (result.matchedCount === 0) {
+          return res.status(404).send({
+            success: false,
+            message: 'Cart item not found',
+          });
+        }
+        res.send({
+          success: true,
+          message: 'Cart quantity updated successfully',
+          result,
+        });
+      } catch (error) {
+        console.error('Update cart error:', error);
+
+        res.status(500).send({
+          success: false,
+          message: 'Failed to update cart quantity',
+        });
+      }
+    });
     /* ==========================
        Categories
     ========================== */
 
-    app.get('/categories', async (req, res) => {
-      const result = await categoriesCollection.find().toArray();
-      res.send(result);
-    });
+    // app.get('/categories', async (req, res) => {
+    //   const result = await categoriesCollection.find().toArray();
+    //   res.send(result);
+    // });
 
     /* ==========================
        Orders
     ========================== */
 
-    app.get('/orders', async (req, res) => {
-      const result = await ordersCollection.find().toArray();
-      res.send(result);
-    });
+    // app.get('/orders', async (req, res) => {
+    //   const result = await ordersCollection.find().toArray();
+    //   res.send(result);
+    // });
 
-    app.post('/orders', async (req, res) => {
-      const order = req.body;
-      const result = await ordersCollection.insertOne(order);
-      res.send(result);
-    });
+    // app.post('/orders', async (req, res) => {
+    //   const order = req.body;
+    //   const result = await ordersCollection.insertOne(order);
+    //   res.send(result);
+    // });
 
     // /* ==========================
     //    Reviews
     // ========================== */
 
-    app.get('/reviews', async (req, res) => {
-      const result = await reviewsCollection.find().toArray();
-      res.send(result);
-    });
+    // app.get('/reviews', async (req, res) => {
+    //   const result = await reviewsCollection.find().toArray();
+    //   res.send(result);
+    // });
 
-    app.post('/reviews', async (req, res) => {
-      const review = req.body;
-      const result = await reviewsCollection.insertOne(review);
-      res.send(result);
-    });
+    // app.post('/reviews', async (req, res) => {
+    //   const review = req.body;
+    //   const result = await reviewsCollection.insertOne(review);
+    //   res.send(result);
+    // });
 
     console.log('✅ MongoDB Connected Successfully');
   } catch (error) {
